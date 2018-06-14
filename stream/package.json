@@ -1,0 +1,19 @@
+{
+  "name": "stream-seed",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "aws-sdk": "^2.257.1",
+    "lodash": "^4.17.10",
+    "uuid": "^3.2.1"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.14.109",
+    "@types/uuid": "^3.4.3",
+    "ts-node": "^6.1.1",
+    "typescript": "^2.9.2"
+  }
+}

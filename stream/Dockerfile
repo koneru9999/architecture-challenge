@@ -1,0 +1,9 @@
+FROM node:8-slim
+
+WORKDIR /server
+
+COPY . /server
+RUN npm install --unsafe-perm
+
+EXPOSE 3000
+CMD [ "npm", "start" ]

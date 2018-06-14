@@ -1,0 +1,33 @@
+version: '3'
+services:
+  ### AWS services emulator
+  aws:
+    image: localstack/localstack
+    environment:
+      - SERVICES=s3:5000,sqs:5001
+      - DEFAULT_REGION=us-east-1
+      - HOSTNAME=localhost
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    network_mode: "host"
+
+  ### Document generator service
+  stream:
+    build: ./stream
+    network_mode: "host"
+    environment:
+      AWS_ACCESS_KEY_ID: random
+      AWS_SECRET_ACCESS_KEY: random
+      AWS_REGION: us-east-1
+
+  ### Microservice #1
+  extract-text:
+    build: ./services/extract-text
+    network_mode: "host"
+    environment:
+      AWS_ACCESS_KEY_ID: random
+      AWS_SECRET_ACCESS_KEY: random
+      AWS_REGION: us-east-1
+
+  ### Microservice #2
