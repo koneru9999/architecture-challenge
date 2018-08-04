@@ -16,6 +16,7 @@ services:
   stream:
     build: ./stream
     network_mode: "host"
+    restart: unless-stopped
     environment:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
@@ -25,6 +26,7 @@ services:
   extract-text:
     build: ./services/extract-text
     network_mode: "host"
+    restart: unless-stopped
     environment:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
