@@ -1,8 +1,3 @@
-export type OutgoingMessage = {
-    delay?: number;
-    body: any;
-}
-
 export interface Message {
     type: string;
     data: any;

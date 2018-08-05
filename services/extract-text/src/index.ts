@@ -11,8 +11,11 @@ async function initialize() {
   const { Attributes } = await sqs.getQueueAttributes({QueueUrl, AttributeNames: ["QueueArn"]}).promise()
 
   // Get Topic ARN -- ideally this is acheived using AWS Console
-  const redisClient = createClient(6379, 'localhost');
+  const redisClient = createClient(+process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost');
   redisClient.get('topicArn', async (err, topicArn) => {
+    
+    console.info("From REDIS for extract-text", topicArn);
+
     await new SNS({endpoint: 'http://localhost:5002' }).subscribe({
       Protocol: 'sqs',
       TopicArn: topicArn,
