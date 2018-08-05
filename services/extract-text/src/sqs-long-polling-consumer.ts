@@ -1,16 +1,19 @@
 import { SQS, S3 } from 'aws-sdk';
 import { EventEmitter } from 'events';
 import { OutgoingMessage, Config } from './models';
+import { RetryStartegy, RetryStrategyFactory, RetryStrategies } from './retry-strategy';
 
 export class SQSLongPolling extends EventEmitter {
     private client: SQS | null;
     private url: string | null;
     private config: Config;
-  
+    private retryStrategy: RetryStartegy;
+    
     constructor(config: Config) {
       super();
       this.client = null;
       this.url = null;
+      this.retryStrategy = RetryStrategyFactory.getRetryStrategy(RetryStrategies.EXPONENTIAL);
       this.config = {
         region: process.env.AWS_REGION,
         accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -65,7 +68,7 @@ export class SQSLongPolling extends EventEmitter {
           secretAccessKey: this.config.secretAccessKey,
           retryDelayOptions: {
             customBackoff: (retryCount: number) => {
-              return retryCount * 5000;
+              return this.retryStrategy.getDelay(retryCount);
             }
           }
         });
