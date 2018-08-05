@@ -1,6 +1,6 @@
-import { SQS, S3 } from 'aws-sdk';
+import { SQS } from 'aws-sdk';
 import { EventEmitter } from 'events';
-import { OutgoingMessage, Config } from './models';
+import { Config } from './models';
 import { RetryStartegy, RetryStrategyFactory, RetryStrategies } from './retry-strategy';
 
 export class SQSLongPolling extends EventEmitter {

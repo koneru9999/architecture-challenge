@@ -81,7 +81,7 @@ export class ExponentialRetryStrategy implements RetryStartegy {
         if (this.resetAfterMaxTries) {
             _retryCount = _retryCount > this.maxTries ? (_retryCount % this.maxTries) : _retryCount;
         }
-        return 2 * _retryCount;
+        return 2 * _retryCount * 1000;
     }
 
     setRestAfterMaxTries(resetAfterMaxTries: boolean): void {
