@@ -106,7 +106,7 @@ export class SQSLongPolling extends EventEmitter {
           AttributeNames: ['All'],
           MaxNumberOfMessages: this.config.maxNumberOfMessages,
           WaitTimeSeconds: this.config.waitTimeSeconds,
-          VisibilityTimeout: this.config.visibilityTimeout || 600
+          VisibilityTimeout: this.config.visibilityTimeout
         })
         .promise()
         .then(data => {
@@ -138,26 +138,6 @@ export class SQSLongPolling extends EventEmitter {
         .catch(err => {
           this.emit('error', err);
         });
-    }
-  
-    sendMessage(message: OutgoingMessage) {
-      if (!message) {
-        message = {
-          body: {},
-          delay: 0
-        };
-      }
-
-      return this.connect().then(client => {
-        return client
-          .sendMessage({
-            MessageBody: JSON.stringify(message.body),
-            QueueUrl: this.url!,
-            DelaySeconds: typeof message.delay === 'number' ? message.delay : 0
-          })
-          .promise();
-      });
-
     }
   
     deleteMessage(receiptHandle: string) {

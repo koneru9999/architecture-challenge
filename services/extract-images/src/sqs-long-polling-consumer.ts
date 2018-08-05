@@ -106,7 +106,7 @@ export class SQSLongPolling extends EventEmitter {
           AttributeNames: ['All'],
           MaxNumberOfMessages: this.config.maxNumberOfMessages,
           WaitTimeSeconds: this.config.waitTimeSeconds,
-          VisibilityTimeout: this.config.visibilityTimeout || 600
+          VisibilityTimeout: this.config.visibilityTimeout
         })
         .promise()
         .then(data => {
