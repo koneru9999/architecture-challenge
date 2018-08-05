@@ -27,6 +27,9 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
+    depends_on:
+      - aws
+      - redis
 
   ### Microservice #1
   extract-text:
@@ -37,6 +40,9 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
+    depends_on:
+      - aws
+      - redis
 
   ### Microservice #2
   extract-images:
@@ -47,3 +53,6 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
+    depends_on:
+      - aws
+      - redis
