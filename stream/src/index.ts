@@ -34,10 +34,10 @@ async function initialize() {
   
   const { TopicArn } = await sns.createTopic({Name}).promise();
 
-  const redis = await createClient(6379, 'localhost');
+  // Save the topic ARN to redis so that other servcices can fetch in-order to subscribe to topic
+  const redis = await createClient(+process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost');
   redis.set('topicArn', TopicArn);
 
-  // const { QueueUrl } = await sqs.createQueue({ QueueName }).promise()
   await s3.createBucket({ Bucket }).promise()
   return { TopicArn, Bucket }
 }

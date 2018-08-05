@@ -13,9 +13,6 @@ async function initialize() {
   // Get Topic ARN -- ideally this is acheived using AWS Console
   const redisClient = createClient(+process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost');
   redisClient.get('topicArn', async (err, topicArn) => {
-    
-    console.info("From REDIS for extract-text", topicArn);
-
     await new SNS({endpoint: 'http://localhost:5002' }).subscribe({
       Protocol: 'sqs',
       TopicArn: topicArn,
