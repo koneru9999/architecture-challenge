@@ -4,12 +4,11 @@ services:
   aws:
     image: localstack/localstack
     environment:
-      - SERVICES=s3:5000,sqs:5001
+      - SERVICES=s3:5000,sqs:5001,sns:5002
       - DEFAULT_REGION=us-east-1
       - HOSTNAME=localhost
     ports:
-      - "5000:5000"
-      - "5001:5001"
+      - "5000-5002:5000-5002"
     network_mode: "host"
 
   ### Document generator service
@@ -33,3 +32,11 @@ services:
       AWS_REGION: us-east-1
 
   ### Microservice #2
+  extract-images:
+    build: ./services/extract-images
+    network_mode: "host"
+    restart: unless-stopped
+    environment: 
+      AWS_ACCESS_KEY_ID: random
+      AWS_SECRET_ACCESS_KEY: random
+      AWS_REGION: us-east-1
