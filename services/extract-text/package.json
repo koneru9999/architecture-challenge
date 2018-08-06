@@ -9,10 +9,12 @@
   },
   "dependencies": {
     "aws-sdk": "^2.257.1",
+    "pdfjs-dist": "^2.0.489",
     "redis": "^2.8.0"
   },
   "devDependencies": {
     "@types/node": "^10.5.6",
+    "@types/pdfjs-dist": "^0.1.2",
     "@types/redis": "^2.8.6",
     "ts-node": "^6.1.1",
     "typescript": "^2.9.2"

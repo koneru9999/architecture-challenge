@@ -1,9 +1,12 @@
 import { SQSLongPolling } from './sqs-long-polling-consumer';
 import { SQS, SNS } from 'aws-sdk';
 import { createClient } from 'redis';
+import { promisify } from 'util';
 
 async function initialize() {
   const QueueName = 'file-stream-images';
+  const redisKey = 'topicArn';
+
   let sqs = new SQS({ endpoint: 'http://localhost:5001' });
   const { QueueUrl } = await sqs.createQueue({ QueueName }).promise()
 
@@ -15,13 +18,22 @@ async function initialize() {
   // Get Topic ARN -- ideally this is acheived using AWS Console
   const redisPort = process.env.REDIS_PORT ? +process.env.REDIS_PORT : 6379;
   const redisClient = createClient(redisPort, process.env.REDIS_HOST || 'localhost');
-  redisClient.get('topicArn', async (err, topicArn) => {
-    await new SNS({endpoint: 'http://localhost:5002' }).subscribe({
-      Protocol: 'sqs',
-      TopicArn: topicArn,
-      Endpoint: Attributes.QueueArn
-    }).promise()
-  });
+  const getAsync = promisify(redisClient.get).bind(redisClient);
+
+  // Simple retry logic to wait until the topic ARN is retrieved
+  let isSuccess = false;
+  while (!isSuccess) {
+    const topicArn = await getAsync(redisKey);
+    console.log('Topic from redis: ', topicArn);
+    if (topicArn) {
+      isSuccess = true;
+      await new SNS({endpoint: 'http://localhost:5002' }).subscribe({
+            Protocol: 'sqs',
+            TopicArn: topicArn,
+            Endpoint: Attributes.QueueArn
+          }).promise();
+    }
+  }
 }
 
 initialize().then(

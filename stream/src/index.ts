@@ -4,6 +4,7 @@ import { createReadStream } from 'fs'
 import { sample, random } from 'lodash'
 import { join } from 'path'
 import { createClient } from 'redis';
+import { promisify } from 'util';
 
 const s3 = new S3({ endpoint: 'http://localhost:5000', s3ForcePathStyle: true })
 const sns = new SNS({ endpoint: 'http://localhost:5002'})
@@ -32,14 +33,18 @@ async function initialize() {
   const Bucket = 'file-stream'
   const Name = 'file-stream'
   
+  await s3.createBucket({ Bucket }).promise()
+
   const { TopicArn } = await sns.createTopic({Name}).promise();
 
   // Save the topic ARN to redis so that other servcices can fetch in-order to subscribe to topic
-  const redis = await createClient(+process.env.REDIS_PORT || 6379, process.env.REDIS_HOST || 'localhost');
-  redis.set('topicArn', TopicArn);
+  const redisPort = process.env.REDIS_PORT ? +process.env.REDIS_PORT : 6379;
+  const redisClient = await createClient(redisPort, process.env.REDIS_HOST || 'localhost');
 
-  await s3.createBucket({ Bucket }).promise()
-  return { TopicArn, Bucket }
+  const setAsync = promisify(redisClient.set).bind(redisClient);
+  await setAsync('topicArn', TopicArn);
+  
+  return { Name, Bucket }
 }
 
 async function generate(options) {
@@ -51,8 +56,8 @@ async function generate(options) {
     await createDocument(TopicArn, Bucket)
     console.log('Created 3 documents after ', timeout)
     clearTimeout(interval)
-    generate(options)
-  }, 10000)
+    //generate(options)
+  }, timeout)
 }
 
 initialize().then(generate)
