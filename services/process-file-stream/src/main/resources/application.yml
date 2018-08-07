@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: '@project.artifactId@'
+
+logging:
+  level:
+    root: INFO
+    org.springframework: DEBUG
+    com.amn.challengearchitecture: DEBUG
+
+server:
+  port: ${PORT:8080}
+
+aws:
+  region: ${AWS_REGION:us-east-1}
+  s3:
+    endPoint: 'http://localhost:5000'
+    bucketName: 'file-stream'
+  sqs:
+    endPoint: 'http://localhost:5001'
+    queue-name: ${PROCESS_QUEUE_NAME:file-stream-text}
+  sns:
+    endPoint: 'http://localhost:5002'
+redis:
+  host: ${REDIS_HOST:localhost}
+  port: ${REDIS_OPRT:6379}
