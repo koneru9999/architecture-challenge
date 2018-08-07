@@ -10,7 +10,7 @@ services:
       - LOCALSTACK_HOSTNAME=localhost
     ports:
       - "5000-5002:5000-5002"
-      - "9000:9000"
+      - "8080:8080"
     network_mode: "host"
   
   ### Redis Service 
@@ -21,30 +21,27 @@ services:
     network_mode: "host"
   
   ### Document generator service
-  stream:
+  stream-v:
     build: ./stream
     network_mode: "host"
-    restart: unless-stopped
     environment:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
 
   ### Microservice #1
-  extract-text:
+  extract-text-v:
     build: ./services/extract-text
     network_mode: "host"
-    restart: unless-stopped
     environment:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
 
   ### Microservice #2
-  extract-images:
+  extract-images-v:
     build: ./services/extract-images
     network_mode: "host"
-    restart: unless-stopped
     environment: 
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
