@@ -21,10 +21,11 @@ const uploadFile = async (filePath: string, Bucket: string, Key: string = filePa
 }
 
 const createDocument = async (TopicArn: string, Bucket: string) => {
-  const samples = ['drylab.pdf', 'example.pdf', 'flyer.pdf', 'magic.pdf', 'PrinceCatalogue.pdf']
-  const filePath = join(__dirname, `documents/${sample(samples)}`)
+  const samples = ['drylab.pdf', 'example.pdf', 'flyer.pdf', 'magic.pdf', 'PrinceCatalogue.pdf'];
+  const selectedFile = sample(samples);
+  const filePath = join(__dirname, `documents/${selectedFile}`)
   const uid = v4()
-  const Key = `${uid}.pdf`
+  const Key = `${uid}-${selectedFile}.pdf`
   await uploadFile(filePath, Bucket, Key)
   await sns.publish({TopicArn, Message:  JSON.stringify({ uid, Bucket, Key }) }).promise()
 }
@@ -34,9 +35,9 @@ async function initialize() {
   const Name = 'file-stream'
   
   await s3.createBucket({ Bucket }).promise()
-
+  console.log('after create bucket', Bucket, Name);
   const { TopicArn } = await sns.createTopic({Name}).promise();
-
+  console.log('after create topic', TopicArn);
   // Save the topic ARN to redis so that other servcices can fetch in-order to subscribe to topic
   const redisPort = process.env.REDIS_PORT ? +process.env.REDIS_PORT : 6379;
   const redisClient = await createClient(redisPort, process.env.REDIS_HOST || 'localhost');
@@ -44,7 +45,7 @@ async function initialize() {
   const setAsync = promisify(redisClient.set).bind(redisClient);
   await setAsync('topicArn', TopicArn);
   
-  return { Name, Bucket }
+  return { TopicArn, Bucket }
 }
 
 async function generate(options) {
@@ -56,8 +57,8 @@ async function generate(options) {
     await createDocument(TopicArn, Bucket)
     console.log('Created 3 documents after ', timeout)
     clearTimeout(interval)
-    //generate(options)
-  }, timeout)
+    generate(options)
+  }, 10000)
 }
 
 initialize().then(generate)

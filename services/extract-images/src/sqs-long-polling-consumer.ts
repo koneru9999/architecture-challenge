@@ -61,8 +61,16 @@ export class SQSLongPolling extends EventEmitter {
         if (this.client) {
           return resolve(this.client);
         }
-        this.client = new SQS({
-          endpoint: 'http://localhost:5001',
+
+        if (this.config.sqs) {
+          this.client = this.config.sqs;
+        } else {
+          this.client = new SQS({
+            endpoint: 'http://localhost:5001',
+          });
+        }
+        
+        this.client.config.update({
           region: this.config.region,
           accessKeyId: this.config.accessKeyId,
           secretAccessKey: this.config.secretAccessKey,
@@ -72,6 +80,7 @@ export class SQSLongPolling extends EventEmitter {
             }
           }
         });
+
         this.client
           .getQueueUrl({
             QueueName: this.config.name
@@ -110,12 +119,15 @@ export class SQSLongPolling extends EventEmitter {
         })
         .promise()
         .then(data => {
+          
           if (this.config.debug) {
             console.info('Received message from remote queue', data);
           }
+
           if (!Array.isArray(data.Messages) || data.Messages.length === 0) {
             return next();
           }
+          
           // Emit each message
           data.Messages.forEach(message => {
             

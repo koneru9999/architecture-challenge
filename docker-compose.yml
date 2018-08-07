@@ -7,8 +7,10 @@ services:
       - SERVICES=s3:5000,sqs:5001,sns:5002
       - DEFAULT_REGION=us-east-1
       - HOSTNAME=localhost
+      - LOCALSTACK_HOSTNAME=localhost
     ports:
       - "5000-5002:5000-5002"
+      - "9000:9000"
     network_mode: "host"
   
   ### Redis Service 
@@ -27,9 +29,6 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
-    depends_on:
-      - aws
-      - redis
 
   ### Microservice #1
   extract-text:
@@ -40,9 +39,6 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
-    depends_on:
-      - aws
-      - redis
 
   ### Microservice #2
   extract-images:
@@ -53,6 +49,3 @@ services:
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
-    depends_on:
-      - aws
-      - redis

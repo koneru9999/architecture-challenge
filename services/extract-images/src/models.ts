@@ -1,3 +1,5 @@
+import { SQS } from "aws-sdk";
+
 export interface Message {
     type: string;
     data: any;
@@ -21,4 +23,5 @@ export type Config = {
     name: string;
     concurrency?: number;
     debug?: boolean;
+    sqs?: SQS;
   };
