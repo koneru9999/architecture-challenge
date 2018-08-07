@@ -50,7 +50,7 @@ async function initialize() {
 
 async function generate(options) {
   const { Bucket, TopicArn } = options
-  const timeout = random(1000)
+  const timeout = random(1000, 10000)
   const interval = setTimeout(async () => {
     await createDocument(TopicArn, Bucket)
     await createDocument(TopicArn, Bucket)
@@ -58,7 +58,7 @@ async function generate(options) {
     console.log('Created 3 documents after ', timeout)
     clearTimeout(interval)
     generate(options)
-  }, 10000)
+  }, timeout)
 }
 
 initialize().then(generate)
