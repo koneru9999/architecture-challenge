@@ -8,9 +8,6 @@ logging:
     org.springframework: INFO
     com.amn.challengearchitecture: DEBUG
 
-server:
-  port: ${PORT:8080}
-
 aws:
   region: ${AWS_REGION:us-east-1}
   s3:

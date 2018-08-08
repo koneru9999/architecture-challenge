@@ -4,6 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event to notify the SNS subscription
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Getter
 @Setter
 public class SNSSubscriptionEvent extends ApplicationEvent {

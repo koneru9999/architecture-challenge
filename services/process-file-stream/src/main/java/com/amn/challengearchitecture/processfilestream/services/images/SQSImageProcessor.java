@@ -13,7 +13,6 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -65,10 +64,5 @@ public class SQSImageProcessor extends AbstractSQSProcessor {
         } catch (IOException e) {
 
         }
-    }
-
-    @Override
-    protected String getKey() {
-        return "IMAGE";
     }
 }

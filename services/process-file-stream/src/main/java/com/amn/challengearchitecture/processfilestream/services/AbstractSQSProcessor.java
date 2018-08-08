@@ -10,10 +10,8 @@ import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.model.DeleteMessageRequest;
 import com.amazonaws.services.sqs.model.DeleteMessageResult;
 import com.amazonaws.services.sqs.model.Message;
-import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amn.challengearchitecture.processfilestream.events.SQSMessageReceivedEvent;
 import com.amn.challengearchitecture.processfilestream.properties.AWSProperties;
-import com.amn.challengearchitecture.processfilestream.services.util.SQSFetchUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +21,11 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.ApplicationListener;
 import org.springframework.util.Assert;
 
+/**
+ * Core SQS Message listener to process the messages independently.
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Slf4j
 public abstract class AbstractSQSProcessor implements ApplicationListener<SQSMessageReceivedEvent> {
     @Autowired
@@ -51,11 +54,23 @@ public abstract class AbstractSQSProcessor implements ApplicationListener<SQSMes
 
     @Override
     public void onApplicationEvent(SQSMessageReceivedEvent sqsMessageReceivedEvent) {
-        log.debug(getKey());
         prepareProcessing(sqsMessageReceivedEvent.getMessage());
     }
 
     /**
+     * Once the message is received from SQS, <br>
+     * <ol>
+     * <li>Download file from S3</li>
+     * <li>Process the downloaded file</li>
+     * <ol>
+     * <li>Parse downloaded file</li>
+     * <li>Extract content and save to a temp file</li>
+     * <li>Upload extracted content to S3</li>
+     * <li>Remove temp file</li>
+     * </ol>
+     * <li>Delete message from queue</li>
+     * </ol>
+     *
      * @param message
      */
     protected void prepareProcessing(Message message) {
@@ -108,6 +123,4 @@ public abstract class AbstractSQSProcessor implements ApplicationListener<SQSMes
      */
     protected abstract void process(S3ObjectInputStream s3FileInputStream,
                                     String fileKey, String bucketName);
-
-    protected abstract String getKey();
 }

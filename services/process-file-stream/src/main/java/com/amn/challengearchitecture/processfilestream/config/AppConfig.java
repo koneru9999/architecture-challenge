@@ -24,6 +24,9 @@ import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import redis.clients.jedis.Jedis;
 
+/**
+ * Base config for the application
+ */
 @Configuration
 @ComponentScan(basePackages = {
         "com.amn.challengearchitecture.processfilestream.services",
@@ -44,6 +47,9 @@ public class AppConfig {
         this.redisProperties = redisProperties;
     }
 
+    /**
+     * @return AmazonS3 client with environment credentials
+     */
     @Bean
     AmazonS3 getS3Client() {
         return AmazonS3ClientBuilder.standard()
@@ -55,6 +61,9 @@ public class AppConfig {
                 .build();
     }
 
+    /**
+     * @return AmazonSQS client with environment credentials
+     */
     @Bean
     AmazonSQS getSQSClient() {
         return AmazonSQSClientBuilder.standard()
@@ -64,6 +73,9 @@ public class AppConfig {
                 .build();
     }
 
+    /**
+     * @return AmazonSNS client with environment credentials
+     */
     @Bean
     AmazonSNS getSNSClient() {
         return AmazonSNSClientBuilder.standard()
@@ -73,18 +85,29 @@ public class AppConfig {
                 .build();
     }
 
+    /**
+     * @return Redis client
+     */
     @Bean
     Jedis redisClient() {
         return new Jedis(redisProperties.getHost(), redisProperties.getPort());
     }
 
+    /**
+     * @return AWS Environemnt credentials provider
+     */
     @Bean
     AWSCredentialsProvider credentialsProvider() {
         return new EnvironmentVariableCredentialsProvider();
     }
 
+    /**
+     * Default behaviour of Spring's event ecosystem is synchronous.
+     * <p>
+     * With this multi caster present in the context, event ecosystem will act as asynchronous.
+     */
     @Bean(name = "applicationEventMulticaster")
-    public ApplicationEventMulticaster simpleApplicationEventMulticaster() {
+    ApplicationEventMulticaster simpleApplicationEventMulticaster() {
         SimpleApplicationEventMulticaster eventMulticaster
                 = new SimpleApplicationEventMulticaster();
 
@@ -92,6 +115,11 @@ public class AppConfig {
         return eventMulticaster;
     }
 
+    /**
+     * Publishes event to configure AWS like SQS Queue, SNS Subscription
+     *
+     * @return command line runner
+     */
     @Bean
     CommandLineRunner extractTextRunner() {
         return args -> {

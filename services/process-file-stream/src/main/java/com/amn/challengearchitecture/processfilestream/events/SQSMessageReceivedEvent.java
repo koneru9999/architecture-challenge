@@ -5,6 +5,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event to notify about a new message has been received from SQS Queue.
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Getter
 @Setter
 public class SQSMessageReceivedEvent extends ApplicationEvent {

@@ -4,6 +4,11 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
 
+/**
+ * Event to notify the SQS Queue created
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Setter
 @Getter
 public class QueueCreatedEvent extends ApplicationEvent {

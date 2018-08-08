@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import redis.clients.jedis.Jedis;
 
+/**
+ * SQS Queue creation event listener.
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Component
 @Slf4j
 public class AWSQueueCreatedHandler implements ApplicationListener<QueueCreatedEvent> {
@@ -30,6 +35,19 @@ public class AWSQueueCreatedHandler implements ApplicationListener<QueueCreatedE
         this.applicationEventPublisher = applicationEventPublisher;
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Once the Queue is created, It needs to subscribed to the SNS topic.<br>
+     * In order to subscribe, we need to know the TopicArn of th topic.<br>
+     * This TopicArn is saved in Redis temporarily.
+     * </p>
+     * <p>
+     * Once the subscription is successful, AWSInitCompletedEvent will be posted.
+     * </p>
+     *
+     * @param queueCreatedEvent
+     */
     @Override
     public void onApplicationEvent(QueueCreatedEvent queueCreatedEvent) {
         // Get Topic ARN from Redis

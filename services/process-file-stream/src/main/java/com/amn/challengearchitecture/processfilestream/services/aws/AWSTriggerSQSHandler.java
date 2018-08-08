@@ -40,6 +40,10 @@ public class AWSTriggerSQSHandler implements ApplicationListener<AWSTriggerEvent
 
     /**
      * {@inheritDoc}
+     * <p>
+     * As a initial step, we have to verify the Queue existence.
+     * CreateQueueRequest will either create (if not exists) or returns existing queue.
+     * </p>
      */
     @Override
     public void onApplicationEvent(AWSTriggerEvent awsTriggerEvent) {

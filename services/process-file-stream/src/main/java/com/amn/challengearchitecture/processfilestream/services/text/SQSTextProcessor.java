@@ -24,6 +24,11 @@ import java.nio.file.Paths;
 import java.util.Map;
 import java.util.stream.Stream;
 
+/**
+ * Implementation to extract the text content from PDF file.
+ *
+ * @author Venkaiah Chowdary Koneru
+ */
 @Profile("extract-text")
 @Component
 @Slf4j
@@ -32,6 +37,13 @@ public class SQSTextProcessor extends AbstractSQSProcessor {
     private static final String TMP_DIR = System.getProperty("java.io.tmpdir");
 
     /**
+     * <ol>
+     * <li>Parse downloaded file</li>
+     * <li>Extract content and save to a temp file</li>
+     * <li>Upload extracted content to S3</li>
+     * <li>Remove temp file</li>
+     * </ol>
+     *
      * @param s3ObjectInputStream
      * @param fileKey
      * @param bucketName
@@ -121,10 +133,5 @@ public class SQSTextProcessor extends AbstractSQSProcessor {
             IOUtils.closeQuietly(output);
             IOUtils.closeQuietly(document);
         }
-    }
-
-    @Override
-    protected String getKey() {
-        return "TEXT";
     }
 }

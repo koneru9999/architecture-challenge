@@ -9,6 +9,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+/**
+ * @author Venkaiah Chowdary Koneru
+ */
 @Slf4j
 public final class SQSFetchUtil {
 
