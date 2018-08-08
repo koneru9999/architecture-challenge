@@ -50,14 +50,15 @@ async function initialize() {
 initialize().then(
   () => {
     // Simple configuration:
-    //  - 2 concurrency listeners
+    //  - 1 concurrency listeners
     //  - each listener can receive up to 4 messages
-    // With this configuration you could receive and parse 8 messages from SQS in parallel
+    // With this configuration you could receive and parse 4 messages from SQS
+    // If we need more parallellism, we could increase the concurrency.
     // We could configure this according to our needs.
     const queue = new SQSLongPolling({
       name: QueueName,
       maxNumberOfMessages: 4,
-      concurrency: 2,
+      concurrency: 1,
       sqs
     });
 

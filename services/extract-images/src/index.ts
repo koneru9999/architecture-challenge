@@ -2,10 +2,10 @@ import { SQSLongPolling } from './sqs-long-polling-consumer';
 import { SQS, SNS, S3 } from 'aws-sdk';
 import { createClient } from 'redis';
 import { promisify, inherits } from 'util';
-import { createWriteStream, unlink, readFileSync, createReadStream } from 'fs';
+import { createWriteStream, unlink, createReadStream, existsSync } from 'fs';
 import { Readable } from 'stream';
 
-let pdfjs = require("pdfjs-dist");
+var PDFImage = require('pdf-image').PDFImage;
 
 const sqs = new SQS({ endpoint: 'http://localhost:5001' });
 const sns = new SNS({endpoint: 'http://localhost:5002' });
@@ -51,14 +51,15 @@ async function initialize() {
 initialize().then(
   () => {
     // Simple configuration:
-    //  - 2 concurrency listeners
-    //  - each listener can receive up to 4 messages
-    // With this configuration you could receive and parse 8 messages from SQS in parallel
+    //  - 1 concurrency listeners
+    //  - each listener can receive up to 1 message
+    // With this configuration you could receive and parse 2 messages from SQS.
+    // If we need more parallellism, we could increase the concurrency.
     // We could configure this according to our needs.
     const queue = new SQSLongPolling({
       name: QueueName,
-      maxNumberOfMessages: 4,
-      concurrency: 2,
+      maxNumberOfMessages: 2,
+      concurrency: 1,
       sqs
     });
 
@@ -67,7 +68,7 @@ initialize().then(
       console.info('Message received from SQS', message);
 
       // Create a temp file to save file from S3
-      let tempFile = createWriteStream(message.Key);
+      let tempFile = createWriteStream(`/tmp/${message.Key}`);
 
       // Download file from S3
       let fileDownloadPromise = new Promise((resolve, reject) => {
@@ -84,78 +85,67 @@ initialize().then(
           }).pipe(tempFile);
       });
 
-      // Once the file is downloaded, we are going to extract the text 
-      // and save extracted content as single file back to S3 with `text-parsed/message.Key` as key
+      // Once the file is downloaded, we are going to convert PDF to PNG images 
+      // and save extracted content as single file back to S3 with `image-parsed/message.Key/pageNum.png` as key
       fileDownloadPromise.then(() => {
+        console.log('file downloaded from S3');
+        var pdfImage = new PDFImage(tempFile.path);
+        pdfImage.numberOfPages().then(function(availablePages) {
+          let maxPage = Math.min(maxPagesToProcess, availablePages);
+          console.log('No.of pages to process for', message.Key, 'are', maxPage);
 
-        pdfjs.getDocument({
-          data: new Uint8Array(readFileSync(message.Key))
-        })
-          .then(doc => {
-            let maxPage = Math.min(maxPagesToProcess, doc.numPages);
+          let generateImage = (pageNum: number, pdfImage) => {
+            return pdfImage.convertPage(pageNum).then(function (imagePath) {
+              const imageFileName = pdfImage.getOutputImagePathForPage(pageNum);
+              console.log(imageFileName);
 
-            console.info('Total number of pages for', message.Key, 'are', doc.numPages);
-            if (maxPage !== doc.numPages) {
-              console.info('We only processing', maxPagesToProcess, 'at the moment as per the configuration');
-            }
+              if(existsSync(imageFileName)) {
+                // save the extracted content back to S3
+                return s3.putObject({
+                  Bucket: message.Bucket,
+                  Key: `image-parsed/${message.Key}/${pageNum + 1}.png`,
+                  Body: createReadStream(`${imageFileName}`)
+                })
+                .promise()
+                .then(res => {
+                  console.info('uploaded thubmail of page', 
+                    (pageNum + 1) , 'for', message.Key, 
+                    'Extracted content location is images-parsed/',
+                    message.Key, '/', (pageNum + 1), '.png');
 
-            var lastPromise = Promise.resolve();
-            var loadPage = function (pageNum) {
-              return doc.getPage(pageNum).then(function (page) {
-                console.log('# Page ' + pageNum);
-                var viewport = page.getViewport(1.0 /* scale */);
-                
-                return page.getOperatorList().then(function (opList) {
-                  var svgGfx = new pdfjs.SVGGraphics(page.commonObjs, page.objs);
-                  svgGfx.embedFonts = true;
-                  return svgGfx.getSVG(opList, viewport).then(function (svg) {
-                    return writeSvgToFile(svg, message.Key + '-page-' + pageNum + '.svg').then(function () {
-                      console.log('# Page', pageNum);
-
-
-                      // save the extracted content back to S3
-                      s3.putObject({
-                        Bucket: message.Bucket,
-                        Key: `image-parsed/${message.Key}/page-${pageNum}.svg`,
-                        Body: createReadStream(message.Key + '-page-' + pageNum + '.svg')
-                      })
-                      .promise()
-                      .then(res => {
-                        console.info('uploaded extracted content for', message.Key, 'Extracted content location is images-extracted/' + message.Key + '/page-' + pageNum + '.svg');
-
-                        e.deleteMessage().then(() => {
-                          console.info('Deleting processed from Queue', message.Key);
-                          e.next();
-                        });
-                        
-                        // Clean-up local temp file as well
-                        unlink(message.Key + '-page-' + pageNum + '.svg', (err) => {
-                          if (err) {
-                            console.info('unable to remove temp file', message.Key + '-page-' + pageNum + '.svg', 'due to', err);
-                          } else {
-                            console.info('Removed temp file', message.Key + '-page-' + pageNum + '.svg');
-                          }
-                        });
-
-                      }); // end of putObject
-
-                    }, function(err) {
-                      console.log('Error: ', err);
+                    // Clean-up local temp file as well
+                    unlink(`${imageFileName}`, (err) => {
+                      if (err) {
+                        console.info(`unable to remove temp file ${imageFileName} due to`, err);
+                      } else {
+                        console.info(`Removed temp file ${imageFileName}.png`);
+                      }
                     });
-                  });
-                });
-              });
-            };
+                }).catch(err => console.error('Error uploading image file to S3', err));
+              } else {
+                console.log('image file is not saved for page', pageNum, 'of', message.Key);
+              }
+            }).catch(err => console.error('Error converting page',pageNum, 'for', message.Key));
+          }
 
-            let currPage = 1;
-            while (currPage <= maxPage) {
-              lastPromise = lastPromise.then(loadPage.bind(null, currPage));
-              currPage++;
-            }
+          let currPage = 0;
+          let lastPromise = generateImage(currPage, pdfImage);
+          
+          while (currPage <= maxPage) {
+            lastPromise = lastPromise.then(generateImage.bind(null, currPage, pdfImage));
+            currPage += 1;
+          }
 
-            return lastPromise;
-          }); // end of getDocument
-      });
+          // Once all the content is extracted 
+          lastPromise.then(() => {
+            e.deleteMessage().then(() => {
+              console.info('Deleting processed from Queue', message.Key);
+              e.next();
+            });
+          }); // last promise end
+
+        });
+      }).catch(err => console.error(err));
     });
 
     queue.on('error', err => {
@@ -168,54 +158,4 @@ function tou8(buffer: Buffer) {
   let a = new Uint8Array(buffer.length);
     for (var i = 0; i < buffer.length; i++) a[i] = buffer[i];
   return a;
-}
-
-/**
- * A readable stream which offers a stream representing the serialization of a
- * given DOM element (as defined by domstubs.js).
- *
- * @param {object} options
- * @param {DOMElement} options.svgElement The element to serialize
- */
-function ReadableSVGStream(options): void {
-  if (!(this instanceof ReadableSVGStream)) {
-    return new ReadableSVGStream(options);
-  }
-  
-  Readable.call(this, options);
-  
-  this.serializer = options.svgElement.getSerializer();
-}
-
-inherits(ReadableSVGStream, Readable);
-
-// Implements https://nodejs.org/api/stream.html#stream_readable_read_size_1
-ReadableSVGStream.prototype._read = function() {
-  var chunk;
-  while ((chunk = this.serializer.getNext()) !== null) {
-    if (!this.push(chunk)) {
-      return;
-    }
-  }
-  this.push(null);
-};
-
-// Streams the SVG element to the given file path.
-function writeSvgToFile(svgElement, filePath) {
-  var readableSvgStream = new ReadableSVGStream({
-    svgElement: svgElement,
-  });
-
-  var writableStream = createWriteStream(filePath);
-  
-  return new Promise(function(resolve, reject) {
-    readableSvgStream.once('error', reject);
-    writableStream.once('error', reject);
-    writableStream.once('finish', resolve);
-    readableSvgStream.pipe(writableStream);
-  }).catch(function(err) {
-    readableSvgStream = null; // Explicitly null because of v8 bug 6512.
-    writableStream.end();
-    throw err;
-  });
 }

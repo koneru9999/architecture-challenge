@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "aws-sdk": "^2.257.1",
+    "pdf-image": "^2.0.0",
     "pdfjs-dist": "^2.0.489",
     "redis": "^2.8.0"
   },
