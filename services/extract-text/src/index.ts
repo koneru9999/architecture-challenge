@@ -4,7 +4,7 @@ import { createClient } from 'redis';
 import { promisify } from 'util';
 import { createWriteStream, unlink } from 'fs';
 
-let pdfjs = require("pdfjs-dist");
+let pdfjs = require('pdfjs-dist');
 
 const sqs = new SQS({ endpoint: 'http://localhost:5001' });
 const sns = new SNS({endpoint: 'http://localhost:5002' });

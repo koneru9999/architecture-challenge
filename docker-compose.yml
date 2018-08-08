@@ -39,8 +39,8 @@ services:
       AWS_REGION: us-east-1
 
   ### Microservice #2
-  image-preview-v:
-    build: ./services/image-preview
+  extract-image-preview-v:
+    build: ./services/extract-image-preview
     network_mode: "host"
     environment: 
       AWS_ACCESS_KEY_ID: random
