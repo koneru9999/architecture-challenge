@@ -5,7 +5,7 @@ spring:
 logging:
   level:
     root: INFO
-    org.springframework: DEBUG
+    org.springframework: INFO
     com.amn.challengearchitecture: DEBUG
 
 server:

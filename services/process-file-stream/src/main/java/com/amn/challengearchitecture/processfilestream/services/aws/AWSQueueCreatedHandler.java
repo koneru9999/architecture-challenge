@@ -1,5 +1,8 @@
 package com.amn.challengearchitecture.processfilestream.services.aws;
 
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.model.SubscribeRequest;
+import com.amazonaws.services.sns.model.SubscribeResult;
 import com.amn.challengearchitecture.processfilestream.events.AWSInitCompletedEvent;
 import com.amn.challengearchitecture.processfilestream.events.QueueCreatedEvent;
 import com.amn.challengearchitecture.processfilestream.events.SNSSubscriptionEvent;
@@ -10,19 +13,16 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import redis.clients.jedis.Jedis;
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sns.model.SubscribeRequest;
-import software.amazon.awssdk.services.sns.model.SubscribeResponse;
 
 @Component
 @Slf4j
 public class AWSQueueCreatedHandler implements ApplicationListener<QueueCreatedEvent> {
-    private final SnsClient snsClient;
+    private final AmazonSNS snsClient;
     private final ApplicationEventPublisher applicationEventPublisher;
     private final Jedis redisClient;
 
     @Autowired
-    public AWSQueueCreatedHandler(SnsClient snsClient,
+    public AWSQueueCreatedHandler(AmazonSNS snsClient,
                                   ApplicationEventPublisher applicationEventPublisher,
                                   Jedis redisClient) {
         this.redisClient = redisClient;
@@ -40,17 +40,10 @@ public class AWSQueueCreatedHandler implements ApplicationListener<QueueCreatedE
         log.debug("Queue: {}. TopicArn: {}", queueCreatedEvent.getQueruArn(), topicArn);
 
         // Subscribe to Topic
-        SubscribeRequest subscribeRequest = SubscribeRequest
-                .builder()
-                .topicArn(topicArn)
-                .protocol("sqs")
-                .endpoint(queueCreatedEvent.getQueruArn())
-                .build();
+        SubscribeResult subscribeResponse = snsClient
+                .subscribe(new SubscribeRequest(topicArn, "sqs", queueCreatedEvent.getQueruArn()));
 
-        SubscribeResponse subscribeResponse = snsClient
-                .subscribe(subscribeRequest);
-
-        Assert.isTrue(subscribeResponse.sdkHttpResponse().statusCode() == 200,
+        Assert.isTrue(subscribeResponse.getSdkHttpMetadata().getHttpStatusCode() == 200,
                 "Failed to subscribe Queue to SNS topic");
 
         applicationEventPublisher.publishEvent(new SNSSubscriptionEvent(this, topicArn));

@@ -1,15 +1,15 @@
 package com.amn.challengearchitecture.processfilestream.services.util;
 
-import software.amazon.awssdk.services.sqs.SqsClient;
-import software.amazon.awssdk.services.sqs.model.Message;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest;
-import software.amazon.awssdk.services.sqs.model.ReceiveMessageResponse;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.model.Message;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
+@Slf4j
 public final class SQSFetchUtil {
 
     private SQSFetchUtil() {
@@ -20,17 +20,20 @@ public final class SQSFetchUtil {
      * @param receiveMessageRequest
      * @param f
      */
-    public static void receiveMessages(SqsClient sqsClient,
+    public static void receiveMessages(AmazonSQS sqsClient,
                                        ReceiveMessageRequest receiveMessageRequest,
                                        int delayTimeInSeconds,
                                        Consumer<Message> f) {
         List<Message> messages = null;
         while (messages == null || messages.size() <= 0) {
+            if(log.isDebugEnabled()) {
+                log.debug("Waiting before polling on SQS");
+            }
 
             try {
                 TimeUnit.SECONDS.sleep(delayTimeInSeconds);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                log.error("Interrupted", e);
             }
 
             messages = receiveMessages(sqsClient, receiveMessageRequest);
@@ -44,8 +47,8 @@ public final class SQSFetchUtil {
      * @param receiveMessageRequest
      * @return
      */
-    public static List<Message> receiveMessages(SqsClient sqsClient,
+    public static List<Message> receiveMessages(AmazonSQS sqsClient,
                                                 ReceiveMessageRequest receiveMessageRequest) {
-        return sqsClient.receiveMessage(receiveMessageRequest).messages();
+        return sqsClient.receiveMessage(receiveMessageRequest).getMessages();
     }
 }

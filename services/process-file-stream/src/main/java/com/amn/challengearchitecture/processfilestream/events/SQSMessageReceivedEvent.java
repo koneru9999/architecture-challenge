@@ -1,9 +1,9 @@
 package com.amn.challengearchitecture.processfilestream.events;
 
+import com.amazonaws.services.sqs.model.Message;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.context.ApplicationEvent;
-import software.amazon.awssdk.services.sqs.model.Message;
 
 @Getter
 @Setter

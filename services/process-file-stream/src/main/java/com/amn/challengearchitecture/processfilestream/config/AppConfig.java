@@ -1,5 +1,14 @@
 package com.amn.challengearchitecture.processfilestream.config;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.EnvironmentVariableCredentialsProvider;
+import com.amazonaws.client.builder.AwsClientBuilder.EndpointConfiguration;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.sns.AmazonSNS;
+import com.amazonaws.services.sns.AmazonSNSClientBuilder;
+import com.amazonaws.services.sqs.AmazonSQS;
+import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
 import com.amn.challengearchitecture.processfilestream.events.AWSTriggerEvent;
 import com.amn.challengearchitecture.processfilestream.properties.AWSProperties;
 import com.amn.challengearchitecture.processfilestream.properties.RedisProperties;
@@ -14,15 +23,6 @@ import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.event.SimpleApplicationEventMulticaster;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import redis.clients.jedis.Jedis;
-import software.amazon.awssdk.auth.credentials.AwsCredentialsProvider;
-import software.amazon.awssdk.auth.credentials.EnvironmentVariableCredentialsProvider;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.S3Configuration;
-import software.amazon.awssdk.services.sns.SnsClient;
-import software.amazon.awssdk.services.sqs.SqsClient;
-
-import java.net.URI;
 
 @Configuration
 @ComponentScan(basePackages = {
@@ -45,30 +45,31 @@ public class AppConfig {
     }
 
     @Bean
-    S3Client getS3Client() {
-        return S3Client.builder()
-                .region(Region.of(awsProperties.getRegion()))
-                .endpointOverride(URI.create(awsProperties.getS3().getEndPoint()))
-                .serviceConfiguration(S3Configuration.builder().pathStyleAccessEnabled(true).build())
-                .credentialsProvider(credentialsProvider())
+    AmazonS3 getS3Client() {
+        return AmazonS3ClientBuilder.standard()
+                .withCredentials(credentialsProvider())
+                .enablePathStyleAccess()
+                .disableChunkedEncoding()
+                .withEndpointConfiguration(new EndpointConfiguration(awsProperties.getS3().getEndPoint(),
+                        awsProperties.getRegion()))
                 .build();
     }
 
     @Bean
-    SqsClient getSQSClient() {
-        return SqsClient.builder()
-                .region(Region.of(awsProperties.getRegion()))
-                .credentialsProvider(credentialsProvider())
-                .endpointOverride(URI.create(awsProperties.getSqs().getEndPoint()))
+    AmazonSQS getSQSClient() {
+        return AmazonSQSClientBuilder.standard()
+                .withCredentials(credentialsProvider())
+                .withEndpointConfiguration(new EndpointConfiguration(awsProperties.getSqs().getEndPoint(),
+                        awsProperties.getRegion()))
                 .build();
     }
 
     @Bean
-    SnsClient getSNSClient() {
-        return SnsClient.builder()
-                .region(Region.of(awsProperties.getRegion()))
-                .credentialsProvider(credentialsProvider())
-                .endpointOverride(URI.create(awsProperties.getSns().getEndPoint()))
+    AmazonSNS getSNSClient() {
+        return AmazonSNSClientBuilder.standard()
+                .withCredentials(credentialsProvider())
+                .withEndpointConfiguration(new EndpointConfiguration(awsProperties.getSns().getEndPoint(),
+                        awsProperties.getRegion()))
                 .build();
     }
 
@@ -78,8 +79,8 @@ public class AppConfig {
     }
 
     @Bean
-    AwsCredentialsProvider credentialsProvider() {
-        return EnvironmentVariableCredentialsProvider.create();
+    AWSCredentialsProvider credentialsProvider() {
+        return new EnvironmentVariableCredentialsProvider();
     }
 
     @Bean(name = "applicationEventMulticaster")
