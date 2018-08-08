@@ -1,9 +1,8 @@
 import { SQSLongPolling } from './sqs-long-polling-consumer';
 import { SQS, SNS, S3 } from 'aws-sdk';
 import { createClient } from 'redis';
-import { promisify, inherits } from 'util';
+import { promisify } from 'util';
 import { createWriteStream, unlink, createReadStream, existsSync } from 'fs';
-import { Readable } from 'stream';
 
 var PDFImage = require('pdf-image').PDFImage;
 

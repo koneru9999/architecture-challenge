@@ -67,7 +67,7 @@ initialize().then(
       console.info('Message received from SQS', message);
 
       // Create a temp file to save file from S3
-      let tempFile = createWriteStream(`${message.Key}`);
+      let tempFile = createWriteStream(`/tmp/${message.Key}`);
 
       // Download file from S3
       let fileDownloadPromise = new Promise((resolve, reject) => {
@@ -88,13 +88,13 @@ initialize().then(
       // and save extracted content as single file back to S3 with `text-parsed/message.Key` as key
       fileDownloadPromise.then(() => {
 
-        pdfjs.getDocument(`${message.Key}`)
+        pdfjs.getDocument(`/tmp/${message.Key}`)
           .then(doc => {
             let maxPage = Math.min(maxPagesToProcess, doc.numPages);
 
             console.info('Total number of pages for', message.Key, 'are', doc.numPages);
             if (maxPage !== doc.numPages) {
-              console.info('We only processing', maxPagesToProcess, 'at the moment as per the configuration');
+              console.info('We will only process', maxPagesToProcess, 'at the moment as per the configuration');
             }
 
             let textContent = [];
@@ -144,11 +144,11 @@ initialize().then(
                 });
                 
                 // Clean-up local temp file as well
-                unlink(message.Key, (err) => {
+                unlink(`/tmp/${message.Key}`, (err) => {
                   if (err) {
-                    console.info('unable to remove temp file', message.Key, 'due to', err);
+                    console.info('unable to remove temp file /tmp/', message.Key, 'due to', err);
                   } else {
-                    console.info('Removed temp file', message.Key);
+                    console.info('Removed temp file /tmp/', message.Key);
                   }
                 });
 

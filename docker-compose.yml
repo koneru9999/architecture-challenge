@@ -39,32 +39,33 @@ services:
       AWS_REGION: us-east-1
 
   ### Microservice #2
-  extract-images-v:
-    build: ./services/extract-images
+  image-preview-v:
+    build: ./services/image-preview
     network_mode: "host"
     environment: 
       AWS_ACCESS_KEY_ID: random
       AWS_SECRET_ACCESS_KEY: random
       AWS_REGION: us-east-1
+
+  ### Java based services
+  # process-file-stream-text:
+  #   image: process-file-stream
+  #   network_mode: "host"
+  #   environment:
+  #     AWS_ACCESS_KEY_ID: random
+  #     AWS_SECRET_ACCESS_KEY: random
+  #     AWS_REGION: us-east-1
+  #     PROCESS_QUEUE_NAME: file-stream-text
+  #     SPRING_PROFILES_ACTIVE: extract-text
+  #     PORT: 8081
   
-  process-file-stream-text:
-    image: process-file-stream
-    network_mode: "host"
-    environment:
-      AWS_ACCESS_KEY_ID: random
-      AWS_SECRET_ACCESS_KEY: random
-      AWS_REGION: us-east-1
-      PROCESS_QUEUE_NAME: file-stream-text
-      SPRING_PROFILES_ACTIVE: extract-text
-      PORT: 8081
-  
-  process-file-stream-preview-images:
-    image: process-file-stream
-    network_mode: "host"
-    environment:
-      AWS_ACCESS_KEY_ID: random
-      AWS_SECRET_ACCESS_KEY: random
-      AWS_REGION: us-east-1
-      PROCESS_QUEUE_NAME: file-stream-image-preview
-      SPRING_PROFILES_ACTIVE: extract-image-preview
-      PORT: 8082
+  # process-file-stream-preview-images:
+  #   image: process-file-stream
+  #   network_mode: "host"
+  #   environment:
+  #     AWS_ACCESS_KEY_ID: random
+  #     AWS_SECRET_ACCESS_KEY: random
+  #     AWS_REGION: us-east-1
+  #     PROCESS_QUEUE_NAME: file-stream-image-preview
+  #     SPRING_PROFILES_ACTIVE: extract-image-preview
+  #     PORT: 8082
